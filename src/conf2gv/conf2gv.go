@@ -16,7 +16,7 @@ type JobDefinition struct {
 	Priority    int    `xml:"priority,attr"`
 	StartTime   int64  `xml:"startTime,attr"`
 	Schema      string `xml:"schema,attr"`
-	Index		string `xml:"index,attr"`
+	Index	    string `xml:"index,attr"`
 	Query       string `xml:"query"`
 }
 
@@ -25,8 +25,13 @@ type extTable struct {
 	Name string `xml:"name,attr"`
 }
 
+type jobRef struct {
+	ref string
+	idx int
+}
+
 type jobNode struct {
-	inputs []string
+	inputs []jobRef
 	name string
 }
 
@@ -38,7 +43,7 @@ type Config struct {
 
 var configFileName = flag.String("config", "", "The configuration file used.")
 var format = flag.String("format", "gv", "The fomat to plot the graph in, e.g. gexf or gv.")
-var stlye = flag.String("style", "id", "The style of the graph labels e.g. name, id or name_id only.")
+var style = flag.String("style", "id", "The style of the graph labels e.g. name, id or name_id only.")
 
 func readConfig() (cfg Config) {
 	//decode the xml config file
@@ -70,14 +75,21 @@ func csvToSlice(csv string) (out []string) {
 	return out
 }
 
-func jobDef2node(jd JobDefinition) (jout jobNode) {
+func jobDef2node(i int, jd JobDefinition, refs map[string]int) (jout jobNode) {
 	inputs := csvToSlice(jd.Inputs)
-	jout.inputs = make([]string, len(inputs))
-	for i, inp := range inputs {
-		jout.inputs[i] = types.IOWindowFromString(inp).Name
+	jout.inputs = make([]jobRef, len(inputs))
+	for j, inp := range inputs {
+		nm := types.IOWindowFromString(inp).Name
+		jout.inputs[j] = jobRef{ref: nm, idx: refs[nm]}
 	}
 
-	jout.name = types.IOWindowFromString(jd.Output).Name
+	output := csvToSlice(jd.Output)
+	for _, oup := range output {
+		nm := types.IOWindowFromString(oup).Name
+		refs[nm] = i
+	}
+
+	jout.name = jd.Query
 	return jout
 }
 
@@ -90,20 +102,24 @@ func main() {
 	totalLen := len(cfg.Jobs) + len(cfg.ExtImports)
 
 	jobs := make([]jobNode, totalLen)
+	refs := make(map[string]int)
+
 
 	//ExtImports to jobNodes
 	i := 0
 	for _, tbl := range cfg.ExtImports {
 		 jobs[i] = jobNode{name: tbl.Name}
+		 refs[tbl.Name] = i
 		 i++
 	}
 	//jobs to jobNodes
 	for _, job := range cfg.Jobs {
-		 jobs[i] = jobDef2node(job)
+		 jobs[i] = jobDef2node(i, job, refs)
 		 i++
 	}
 
 
+	/*
 	var writer graphWriter
 	if *format == "gexf" {
 		writer = gexfWriter{}
@@ -112,7 +128,9 @@ func main() {
 	} else {
 		log.Fatalf("format: \"%v\" not supported!", *format)
 	}
-	writer.writeGraph(jobs, *stlye, os.Stdout)
+	writer.writeGraph(jobs, *style, os.Stdout)
+	*/
+	gvWriter{}.writeGraph(jobs, *style, os.Stdout)
 
 
 //	for _,job := range jobs {

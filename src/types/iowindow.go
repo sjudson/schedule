@@ -2,10 +2,10 @@ package types
 
 
 import (
-	"log"
+	//"log"
 	"fmt"
 	"strings"
-	"strconv"
+	//"strconv"
 )
 
 type IOWindow struct {
@@ -47,6 +47,13 @@ func (wa IOWindow) Equals(wb IOWindow) bool {
 }
 
 func IOWindowFromString(wndDef string) (w IOWindow) {
+	/* we're not actually working with TCP so this isn't relevant to us */
+	name := strings.ToLower(wndDef)
+	wndSize    := 999999999
+	wndOffset  := 0
+	wndPrimary := false
+
+	/*
 	def := strings.ToLower(wndDef)
 	wndStart := strings.Index(def, "(")
 	wndEnd := strings.Index(def, ")")
@@ -80,6 +87,7 @@ func IOWindowFromString(wndDef string) (w IOWindow) {
 			log.Fatalf("SYNTAX ERROR: \"%s\" not followed by a integer in window definition \"%s\".%v\n", fields[i], wndDef, err)
 		}
 	}
+	*/
 
 	w = IOWindow{name, "", wndSize, wndOffset, wndPrimary}
 	return

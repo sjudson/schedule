@@ -1,8 +1,8 @@
-package main 
+package main
 
 import (
-	"encoding/xml"
-	"log"
+	//"encoding/xml"
+	//"log"
 	"os"
 	"fmt"
 )
@@ -12,6 +12,7 @@ type graphWriter interface {
 	writeGraph([]jobNode, string, *os.File)
 }
 
+/*
 type gexfWriter struct {
 }
 
@@ -43,7 +44,7 @@ type gexfEdge struct {
 
 func (g gexfWriter) writeGraph(jobs []jobNode, style string, f *os.File) {
 	defer f.Close()
-	root := gexfMain{/*xmlns:"http://www.gexf.net/1.2draft",*/ Version:"1.2"}
+	root := gexfMain{xmlns:"http://www.gexf.net/1.2draft", Version:"1.2"}
 	root.Graph = gexfGraph{Mode:"static", Defaultedgetype:"directed"}
 
 	nodeIds := make(map[string]int, len(jobs))
@@ -70,6 +71,7 @@ func (g gexfWriter) writeGraph(jobs []jobNode, style string, f *os.File) {
 		log.Panicf("error: %v\n", err)
 	}
 }
+*/
 
 type gvWriter struct {}
 
@@ -93,7 +95,7 @@ func (g gvWriter) writeGraph(jobs []jobNode, style string, f *os.File) {
 	edgeId := 0
 	for _, job := range jobs {
 		for _, input := range job.inputs {
-			f.WriteString(fmt.Sprintf("\t%d -> %d;\n", nodeIds[input], nodeIds[job.name]))
+			f.WriteString(fmt.Sprintf("\t%d -> %d;\n", input.idx, nodeIds[job.name]))
 			edgeId++
 		}
 	}

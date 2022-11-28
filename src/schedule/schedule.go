@@ -89,7 +89,7 @@ func jobDef2node(jd JobDefinition) (jout types.JobNode) {
 		jout.Inputs[i] = wnd.Name
 	}
 
-	jout.Name = types.IOWindowFromString(jd.Output).Name
+	jout.Name = jd.Query
 
 	jout.CpuTime = jd.CPUTime
 	if jout.CpuTime == 0.0 {

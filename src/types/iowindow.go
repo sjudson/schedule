@@ -48,7 +48,7 @@ func (wa IOWindow) Equals(wb IOWindow) bool {
 
 func IOWindowFromString(wndDef string) (w IOWindow) {
 	/* we're not actually working with TCP so this isn't relevant to us */
-	name := strings.ToLower(wndDef)
+	name       := strings.ToLower(wndDef)
 	wndSize    := 999999999
 	wndOffset  := 0
 	wndPrimary := false

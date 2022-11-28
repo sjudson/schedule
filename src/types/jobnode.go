@@ -1,5 +1,10 @@
 package types
 
+type JobRef struct {
+	Ref string
+	Idx int
+}
+
 //node used in simple algorithms
 type JobNode struct {
 	Id int
@@ -8,7 +13,7 @@ type JobNode struct {
 
 	Name string
 
-	Inputs []string
+	Inputs []JobRef
 	InIds []int
 
 	OutIds []int
@@ -16,4 +21,3 @@ type JobNode struct {
 	CpuTime float64
 	Depth	int
 }
-

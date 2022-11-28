@@ -81,12 +81,18 @@ func csvToSlice(csv string) (out []string) {
 	return out
 }
 
-func jobDef2node(jd JobDefinition) (jout types.JobNode) {
+func jobDef2node(i int, jd JobDefinition, refs map[string]int) (jout types.JobNode) {
 	inputs := csvToSlice(jd.Inputs)
-	jout.Inputs = make([]string, len(inputs))
-	for i, inp := range inputs {
-		wnd := types.IOWindowFromString(inp)
-		jout.Inputs[i] = wnd.Name
+	jout.Inputs = make([]types.JobRef, len(inputs))
+	for j, inp := range inputs {
+		nm := types.IOWindowFromString(inp).Name
+		jout.Inputs[j] = types.JobRef{Ref: nm, Idx: refs[nm]}
+	}
+
+	output := csvToSlice(jd.Output)
+	for _, oup := range output {
+		nm := types.IOWindowFromString(oup).Name
+		refs[nm] = i
 	}
 
 	jout.Name = jd.Query
@@ -272,6 +278,7 @@ func readJobs(cfg Config) ([]types.JobNode, []string) {
 	totalLen := len(cfg.Jobs) + len(cfg.ExtImports)
 
 	jobs := make([]types.JobNode, totalLen)
+	refs := make(map[string]int)
 	queries := make([]string, totalLen)
 
 	//ExtImports to types.JobNodes
@@ -282,12 +289,13 @@ func readJobs(cfg Config) ([]types.JobNode, []string) {
 			ioTime = 1.0
 		}
 		jobs[i] = types.JobNode{Name: tbl.Name, IOTime: ioTime}
+		refs[tbl.Name] = i
 		queries[i] = fmt.Sprintf("-- table:%v ioTime%v", tbl.Name, ioTime)
 		i++
 	}
 	//jobs to types.JobNodes
 	for _, job := range cfg.Jobs {
-		jobs[i] = jobDef2node(job)
+		jobs[i] = jobDef2node(i, job, refs)
 		queries[i] = job.Query
 		i++
 	}
@@ -306,15 +314,15 @@ func readJobs(cfg Config) ([]types.JobNode, []string) {
 			job.InIds = make([]int, len(job.Inputs))
 		}
 		for j, input := range job.Inputs {
-			job.InIds[j] = nodeIds[input]
-			parent := jobs[nodeIds[input]]
+			job.InIds[j] = input.Idx
+			parent := jobs[input.Idx]
 			if parent.OutIds == nil {
 				parent.OutIds = make([]int, 1)
 				parent.OutIds[0] = job.Id
 			} else {
 				parent.OutIds = append(parent.OutIds, job.Id)
 			}
-			jobs[nodeIds[input]] = parent
+			jobs[input.Idx] = parent
 		}
 		jobs[i] = job
 	}
